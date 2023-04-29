@@ -1,0 +1,119 @@
+CREATE TABLE IF NOT EXISTS users(
+userName VARCHAR(20) NOT NULL PRIMARY KEY,
+firstName VARCHAR(20),
+lastName VARCHAR(20),
+emailAddress VARCHAR(30),
+dateJoined DATE
+);
+
+INSERT INTO Users VALUES
+('dedyla', '20067112@tafe.wa.edu.au', '2023-09-05'),
+('chthom', '20067112@tafe.wa.edu.au', '2022-03-24'),
+('wabrad', '20067112@tafe.wa.edu.au', '2021-09-05'),
+('digeor', '20067112@tafe.wa.edu.au', '2021-08-05'),
+('bojake', '20067112@tafe.wa.edu.au', '2021-10-05'),
+('cajaco', '20067112@tafe.wa.edu.au', '2021-07-05'),
+('doluna', '20067112@tafe.wa.edu.au', '2021-11-05');
+
+SELECT userName, emailAddress FROM users;
+
+SELECT userName, dateJoined FROM users WHERE YEAR(dateJoined) = YEAR(NOW());
+
+SELECT COUNT(userName) FROM users WHERE YEAR(dateJoined) = YEAR(NOW());
+
+SELECT lastName, firstName, emailAddress, dateJoined FROM users ORDER BY lastName, firstName;
+
+CREATE INDEX indexEmailAddress ON users (emailAddress);
+
+CREATE INDEX indexLastNameFirstName ON users (lastName, firstName);
+
+DELIMITER //
+CREATE PROCEDURE userDetails(yearJoined YEAR)
+BEGIN
+SELECT * FROM Users WHERE YEAR(dateJoined) = yearJoined ORDER BY dateJoined;
+END//
+DELIMITER ; 
+
+CREATE TABLE IF NOT EXISTS Messages(
+ID INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+authorUserName VARCHAR(20),
+message VARCHAR(256),
+timePosted TIME
+);
+
+INSERT INTO Messages (authorUserName, message, timePosted) VALUES
+('dedyla', 'Did you guys see in the Sydney Morning Herald that catholic schools in Melbourne are being encouraged to use ChatGPT for teaching and assessment?', '06:00:00'),
+('cajaco', NULL, NULL),
+('chthom', 'No. When was the story written and by whom?', '06:00:01'),
+('bojake', '13', '06:00:04'),
+('wabrad', 'Yesterday at 08:51 by Adam Carey', '06:00:09'),
+('digeor', 'How old must somebody be to use it?', '06:00:03'),
+('doluna', 'What states have banned ChatGPT?', '06:00:07'),
+('dedyla', 'VIC, NSW, QLD, TAS, WA', '06:00:08');
+
+SELECT message, userName FROM Users INNER JOIN Messages ON userName = authorUserName;
+
+SELECT message, userName, emailAddress FROM Users INNER JOIN Messages ON userName = authorUserName;
+
+CREATE VIEW messagesSum AS SELECT COUNT(message) FROM Messages;
+
+DELIMITER //
+CREATE PROCEDURE calculatePercentage (name VARCHAR(20))
+BEGIN 
+DECLARE usersMessagesCount INT;
+DECLARE totalMessagesCount INT;
+SELECT COUNT(message) INTO usersMessagesCount FROM Users INNER JOIN Messages ON userName = authorUserName WHERE userName = name;
+SELECT * FROM messagesSum INTO totalMessagesCount;
+SELECT usersMessagesCount / totalMessagesCount * 100;
+END //
+DELIMITER ;
+
+SELECT userName FROM Users INNER JOIN Messages ON userName = authorUserName WHERE message IS NOT NULL;
+
+DELIMITER //
+CREATE PROCEDURE usersMessages(name VARCHAR(20))
+BEGIN 
+SELECT message FROM Users INNER JOIN messages ON userName = authorUserName WHERE userName = name ORDER BY timePosted DESC;
+END //
+DELIMITER ;
+
+CREATE TABLE IF NOT EXISTS MessageTopics(
+ID INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+messageID TINYINT UNSIGNED,
+topicName VARCHAR(100)
+);
+
+CREATE TABLE IF NOT EXISTS Topics(
+name VARCHAR(100) NOT NULL PRIMARY KEY,
+trending BIT
+);
+
+SELECT DISTINCT name FROM Topics INNER JOIN MessageTopics ON name = topicName WHERE trending = true
+
+CREATE VIEW messagesWithTopicsAndTrending AS 
+SELECT authorUserName, message, timeposted, name, trending FROM Messages
+INNER JOIN MessageTopics ON Messages.ID = MessageTopics.messageID
+INNER JOIN Topics ON MessageTopics.topicName = topics.name;
+
+SELECT * FROM messagesWithTopicsAndTrending WHERE trending = true ORDER BY timePosted DESC;
+
+DELIMITER //
+CREATE PROCEDURE topicsMessagesAndMessagesUserName (topic VARCHAR(100))
+BEGIN 
+SELECT message, authorUserName FROM messagesWithTopicsAndTrending WHERE topic = name;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE usersTopiclessMessengers (user VARCHAR(20))
+BEGIN 
+SELECT message FROM messagesWithTopicsAndTrending WHERE user = authorUserName;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE countUsersMessagesOnTopic (user VARCHAR(20), topic VARCHAR(100))
+BEGIN 
+SELECT COUNT(message) FROM messagesWithTopicsAndTrending WHERE user = authorUserName AND topic = name;
+END //
+DELIMITER ;
