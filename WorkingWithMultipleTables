@@ -1,0 +1,69 @@
+CREATE TABLE IF NOT EXISTS folders(
+ID INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(255),
+created DATE,
+accessed DATE,
+modified DATE
+);
+
+CREATE TABLE IF NOT EXISTS files(
+ID INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+folders_ID INT,
+name VARCHAR(255),
+created DATE,
+accessed DATE,
+modified DATE,
+file_size_bytes MEDIUMINT UNSIGNED
+);
+
+INSERT INTO folders (name, accessed, modified, created) VALUES ('dataDrivenApps', '2023-02-28', '2023-02-28', '2023-02-28');
+
+INSERT INTO folders (name) VALUES ('introToProgramming');
+
+UPDATE folders SET created = SUBDATE((SELECT NOW()), INTERVAL 1 WEEK) WHERE ID = 1;
+
+INSERT INTO files (folders_ID, name, accessed, modified, created, file_size_bytes) VALUES (1, 'workingWithMultipleTables', '2022-02-28', '2022-02-28', '2022-02-28', 1352);
+
+INSERT INTO files (folders_ID) VALUES (2);
+
+SELECT name FROM files WHERE folders_ID = 1;
+SELECT folders.name AS name_folder, files.name AS name_file FROM files INNER JOIN folders ON files.folders_ID = folders.ID;
+SELECT folders.name AS name_folder, files.name AS name_file FROM files INNER JOIN folders ON files.folders_ID = folders.ID WHERE files.accessed != YEAR(NOW()); 
+SELECT folders.name AS name_folder, files.name AS name_file FROM files INNER JOIN folders ON files.folders_ID = folders.ID ORDER BY file_size_bytes ASC;
+SELECT files.name AS name_file, folders.name AS name_folder FROM files INNER JOIN folders ON files.folders_ID = folders.ID ORDER BY folders.name AND file_size_bytes ASC;
+SELECT files.name AS name_file, folders.name AS name_folder FROM files INNER JOIN folders ON files.folders_ID = folders.ID WHERE folders.created = (SELECT DATE_SUB(NOW(), INTERVAL 1 WEEK));
+SELECT SUM(file_size_bytes) FROM files WHERE folders_ID = 1;
+SELECT name FROM folders UNION SELECT name FROM files;
+SELECT name, created, accessed FROM folders UNION SELECT name, created, accessed FROM files;
+
+CREATE TABLE IF NOT EXISTS author(
+ID INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(5),
+surname VARCHAR(10)
+);
+
+CREATE TABLE IF NOT EXISTS orders(
+ID INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+author_ID INT UNSIGNED,
+book_ID INT UNSIGNED
+);
+
+CREATE TABLE IF NOT EXISTS book(
+ID INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+name_book VARCHAR(20),
+ID_first_author INT UNSIGNED,
+ID_second_author INT UNSIGNED
+);
+
+INSERT INTO book (name_book, ID_first_author, ID_second_author) VALUES
+('MySQL', 1, NULL), ('Maths', 2, NULL), ('Physical Education Studies', 3, 4), ('Piazza', 5, 6);
+
+INSERT INTO author (name, surname) VALUES
+('Dylan', 'De Souza'), ('Toby', 'Coulstock'), ('Peter', 'Jones'), ('Kyan', 'Jones'), ('Kay', 'Lipson'), ('Kyle', 'Lipson');
+
+INSERT INTO orders (author_ID, book_ID) VALUES
+(1, 1), (2, 2), (3, 3), (4, 4), (5, 1), (6, 2);
+
+SELECT author.name, author.surname, book.name_book FROM author
+INNER JOIN orders ON author.ID = orders.author_ID
+INNER JOIN book ON orders.book_ID = book.ID;
