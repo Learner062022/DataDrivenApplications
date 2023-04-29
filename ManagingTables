@@ -1,0 +1,62 @@
+CREATE TABLE IF NOT EXISTS stock(
+ID INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(67),
+description VARCHAR(351),
+price DEC(5, 2) UNSIGNED,
+quantity MEDIUMINT UNSIGNED
+);
+
+ALTER TABLE stock ADD sellBy DATE;
+
+CREATE TABLE IF NOT EXISTS customerDetails(
+name VARCHAR(5),
+surname VARCHAR(8),
+gender CHAR(1),
+CONSTRAINT check_gender CHECK (gender = 'M' OR gender = 'F' OR gender = 'X'),
+DOB DATE,
+phoneNumber CHAR(10), 
+emailAddress VARCHAR(23) NOT NULL PRIMARY KEY,
+address VARCHAR(31)
+);
+
+ALTER TABLE customerDetails DROP COLUMN gender;
+
+CREATE TABLE IF NOT EXISTS companiesStockPrices(
+name VARCHAR(33),
+tickerSymbol VARCHAR(5) NOT NULL PRIMARY KEY,
+sharePrice DEC(8 ,2) UNSIGNED,
+CONSTRAINT checkSharePrice CHECK (share_price > 429496.72)
+);
+
+CREATE TABLE IF NOT EXISTS car(
+make VARCHAR(33),
+model VARCHAR(51),
+numberPlate CHAR(7) NOT NULL PRIMARY KEY,
+year YEAR,
+stateCode CHAR(3),
+CONSTRAINT checkStateCode CHECK (state = 'WA' OR state = 'QLD' OR state = 'NSW' OR state = 'SA' OR state = 'VIC' OR state = 'TAS')
+);
+
+ALTER TABLE car ADD drivingLicenseNumber CHAR(11);
+
+ALTER TABLE car MODIFY COLUMN state_code VARCHAR(17); 
+
+CREATE TABLE IF NOT EXISTS babyDetails(
+name VARCHAR(5),
+surname VARCHAR(8),
+gender CHAR(1),
+weight DEC(6, 2) UNSIGNED,
+height DEC(4, 2) UNSIGNED,
+DOB DATETIME NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS famousLandmarks(
+name VARCHAR(255),
+rating TINYINT UNSIGNED,
+longitude DEC(9,15) NOT NULL,
+latitude DEC(10,15) NOT NULL,
+closestCityOrTown VARCHAR(85),
+country VARCHAR(85),
+distanceFromPerthKm SMALLINT UNSIGNED,
+PRIMARY KEY(longitude, latitude)
+);
