@@ -1,51 +1,130 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.4.33213.308
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeatherDataEntry", "WeatherDataEntry\WeatherDataEntry.csproj", "{2C62BAD5-5525-45DB-A319-AA0519EC395A}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|ARM = Debug|ARM
-		Debug|ARM64 = Debug|ARM64
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|ARM = Release|ARM
-		Release|ARM64 = Release|ARM64
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Debug|ARM.ActiveCfg = Debug|ARM
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Debug|ARM.Build.0 = Debug|ARM
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Debug|ARM.Deploy.0 = Debug|ARM
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Debug|ARM64.Build.0 = Debug|ARM64
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Debug|ARM64.Deploy.0 = Debug|ARM64
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Debug|x64.ActiveCfg = Debug|x64
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Debug|x64.Build.0 = Debug|x64
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Debug|x64.Deploy.0 = Debug|x64
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Debug|x86.ActiveCfg = Debug|x86
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Debug|x86.Build.0 = Debug|x86
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Debug|x86.Deploy.0 = Debug|x86
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Release|ARM.ActiveCfg = Release|ARM
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Release|ARM.Build.0 = Release|ARM
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Release|ARM.Deploy.0 = Release|ARM
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Release|ARM64.ActiveCfg = Release|ARM64
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Release|ARM64.Build.0 = Release|ARM64
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Release|ARM64.Deploy.0 = Release|ARM64
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Release|x64.ActiveCfg = Release|x64
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Release|x64.Build.0 = Release|x64
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Release|x64.Deploy.0 = Release|x64
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Release|x86.ActiveCfg = Release|x86
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Release|x86.Build.0 = Release|x86
-		{2C62BAD5-5525-45DB-A319-AA0519EC395A}.Release|x86.Deploy.0 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {EE84AFC0-8F37-406F-A0D6-6584751A3702}
-	EndGlobalSection
-EndGlobal
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Foundation;
+using Windows.Foundation.Collections;
+using Windows.Storage;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Navigation;
+using Microsoft.Data.Sqlite;
+using System.Diagnostics;
+
+// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
+
+namespace WeatherDataEntry
+{
+    /// <summary>
+    /// An empty page that can be used on its own or navigated to within a Frame.
+    /// </summary>
+    /// 
+
+    class Sql
+    {
+        public static SqliteConnection database;
+        public static  SqliteCommand table;
+
+        public static void CreateTable()
+        {
+            string createTableQuery = "CREATE TABLE IF NOT EXISTS weather(minTemp INT, maxTemp TINYINT UNSIGNED, rainfall INT UNSIGNED);";
+            table = new SqliteCommand(createTableQuery, database);
+            table.ExecuteNonQuery();
+        }
+
+        public static async void InitialiseDatabaseFile()
+        {
+            await ApplicationData.Current.LocalFolder.CreateFileAsync("weatherDatabase.db", CreationCollisionOption.OpenIfExists);
+            string databasePath = Path.Combine(ApplicationData.Current.LocalFolder.Path, "weatherDatabase.db");
+            database = new SqliteConnection("Filename=" + databasePath);
+            Debug.WriteLine(databasePath);
+            database.Open();
+            CreateTable();
+        }
+
+        public static void InsertData(string lowestTemp, string highestTemp, string precipitation)
+        {
+            string insertDataQuery = "INSERT INTO weather(minTemp, maxTemp, rainfall) VALUES (" + int.Parse(lowestTemp) + ", " + int.Parse(highestTemp) + ", " + int.Parse(precipitation) + ");";
+            SqliteCommand insertData = new SqliteCommand(insertDataQuery, database);
+            insertData.ExecuteReader();
+        }
+
+        public static int CalcNumRecords()
+        {
+            int result = 0;
+            String getDataQuery = "SELECT COUNT(minTemp) FROM weather;";
+            SqliteCommand getData = new SqliteCommand(getDataQuery, database);
+            SqliteDataReader queryResult = getData.ExecuteReader();
+            while (queryResult.Read())
+            {
+                result = queryResult.GetInt32(0);
+            }
+            return result;
+        }
+
+        public static int CalcSumRainfall()
+        {
+            int result = 0;
+            String getDataQuery = "SELECT SUM(rainfall) FROM weather;";
+            SqliteCommand getData = new SqliteCommand(getDataQuery, database);
+            SqliteDataReader queryResult = getData.ExecuteReader();
+            while (queryResult.Read())
+            {
+                result = queryResult.GetInt32(0);
+            }
+            return result;
+        }
+
+        public static int CalcAvgMinTemp()
+        {
+            int result = 0;
+            string getDataQuery = "SELECT AVG(minTemp) FROM weather;";
+            SqliteCommand getData = new SqliteCommand(getDataQuery, database);
+            SqliteDataReader queryResult = getData.ExecuteReader();
+            while (queryResult.Read())
+            {
+                result = queryResult.GetInt32(0);
+            }
+            return result;
+        }
+
+        public static int CalcAvgMaxTemp()
+        {
+            int result = 0;
+            string getDataQuery = "SELECT AVG(maxTemp) FROM weather;";
+            SqliteCommand getData = new SqliteCommand(getDataQuery, database);
+            SqliteDataReader queryResult = getData.ExecuteReader();
+            while (queryResult.Read())
+            {
+                result = queryResult.GetInt32(0);
+            }
+            return result;
+        }
+    }
+
+    public sealed partial class MainPage : Page
+    {
+        public MainPage()
+        {
+            this.InitializeComponent();
+            Sql.InitialiseDatabaseFile();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Sql.InsertData(minTemp.Text, maxTemp.Text, rainfall.Text);
+            minTemp.Text = "";
+            maxTemp.Text = "";
+            rainfall.Text = "";
+            numRec.Text = Sql.CalcNumRecords().ToString();
+            totalRainfall.Text = Sql.CalcNumRecords().ToString();
+            averMinTemp.Text = Sql.CalcAvgMinTemp().ToString();
+            averMaxTemp.Text = Sql.CalcAvgMaxTemp().ToString();
+        }
+    }
+}
